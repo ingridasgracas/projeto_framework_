@@ -1,0 +1,311 @@
+# INVENTÁRIO DO DATA LAKE - RJ SUPERAPP
+## Análise Exploratória e Documentação Técnica
+
+**Data da Análise:** 18 de setembro de 2025  
+**Versão:** 1.0  
+**Escopo:** Datasets brutos_rmi e brutos_go  
+
+---
+
+## SUMÁRIO EXECUTIVO
+
+Este documento apresenta o inventário completo das tabelas e campos do data lake RJ SuperApp, incluindo:
+
+- **9 tabelas** distribuídas em 2 datasets principais
+- **Arquitetura de tracking** cross-platform via CPF
+- **Relacionamentos** e dependências entre entidades
+- **Queries SQL** para análise exploratória
+- **Casos de uso** para analytics e business intelligence
+
+### DATASETS ANALISADOS
+
+1. **rj-superapp.brutos_rmi** (7 tabelas)
+   - Sistema principal de gestão de usuários
+   - Logs de auditoria e tracking comportamental
+   - Gestão de comunicação e consentimento
+
+2. **rj-superapp.brutos_go** (2 tabelas)
+   - Plataforma educacional
+   - Gestão de cursos e inscrições
+
+---
+
+## ARQUITETURA DE DADOS
+
+### FLUXO DE DADOS
+```
+[Sistemas Fonte] → [Airbyte ETL] → [BigQuery Data Lake] → [Analytics Layer]
+     ↓                   ↓                    ↓                  ↓
+ RMI + GO          Extract/Transform     brutos_rmi +      User Journey
+ Sistemas          Load Process          brutos_go         Analytics
+```
+
+### CHAVES DE LIGAÇÃO
+
+| Chave | Função | Presente em |
+|-------|--------|-------------|
+| **CPF** | Identificador universal | Todas as tabelas RMI + inscricoes |
+| **curso_id** | FK para cursos | inscricoes → cursos |
+| **phone_number** | ID secundário | opt_in_history, beta_groups, mappings |
+
+---
+
+## INVENTÁRIO DE TABELAS
+
+### SISTEMA RMI (brutos_rmi)
+
+#### 1. rmi_audit_logs - Logs de Auditoria
+**Propósito:** Rastreamento completo de ações e modificações
+
+**Campos Principais:**
+- `cpf` (STRING) - Identificador do usuário
+- `action` (STRING) - Tipo de ação (CREATE, UPDATE, DELETE)
+- `resource` (STRING) - Recurso afetado
+- `timestamp` (STRING) - Momento da ação
+- `old_value/new_value` (STRING) - Valores antes/depois
+- `ip_address` (STRING) - IP do usuário
+- `user_agent` (STRING) - Navegador/dispositivo
+
+**Eventos Capturados:**
+- Modificações de perfil
+- Alterações de endereço/contato
+- Mudanças de configuração
+- Ações administrativas
+
+#### 2. rmi_avatars - Perfis de Usuários
+**Propósito:** Dados completos dos usuários registrados
+
+**Categorias de Dados:**
+- **Identificação:** CPF, nome, dados pessoais
+- **Endereço:** Endereço completo, geolocalização
+- **Contato:** Email, telefone com validação
+- **Saúde:** Unidade básica, equipe de saúde
+- **Social:** CadÚnico, Bolsa Família, CRAS
+
+#### 3. rmi_opt_in_history - Consentimento de Comunicação
+**Propósito:** Tracking de opt-in/opt-out por canal
+
+**Campos Principais:**
+- `action` (STRING) - "opt-in" ou "opt-out"
+- `channel` (STRING) - SMS, WhatsApp, Email, Push
+- `reason` (STRING) - Motivo da ação
+- `timestamp` (STRING) - Momento da decisão
+
+#### 4. rmi_beta_groups - Grupos de Teste
+**Propósito:** Gestão de usuários em programas beta
+
+**Campos Principais:**
+- `beta_group_id` (STRING) - Identificador do grupo
+- `status` (STRING) - Status no programa
+- `created_at/updated_at` (STRING) - Timestamps de participação
+
+#### 5. rmi_phone_cpf_mappings - Mapeamento Telefone-CPF
+**Propósito:** Relacionamento entre números e usuários
+
+#### 6. rmi_self_declared - Dados Autodeclarados
+**Propósito:** Informações fornecidas pelos próprios usuários
+
+#### 7. rmi_users_config - Configurações de Usuários
+**Propósito:** Preferências e configurações personalizadas
+
+### PLATAFORMA EDUCACIONAL (brutos_go)
+
+#### 1. inscricoes - Inscrições em Cursos
+**Propósito:** Gestão da jornada educacional dos usuários
+
+**Campos Principais:**
+- `cpf` (STRING) - Link com sistema RMI
+- `curso_id` (INT64) - Referência ao curso
+- `status` (STRING) - Estado da inscrição
+- `enrolled_at` (TIMESTAMP) - Data de inscrição
+- `concluded_at` (TIMESTAMP) - Data de conclusão
+- `certificate_url` (STRING) - Link do certificado
+
+**Status Possíveis:**
+- Inscrito, Em andamento, Concluído, Cancelado, Suspenso
+
+#### 2. cursos - Catálogo de Cursos
+**Propósito:** Informações detalhadas sobre ofertas educacionais
+
+**Categorias de Dados:**
+- **Acadêmico:** Título, modalidade, carga horária
+- **Cronograma:** Datas de início/fim, período de inscrições
+- **Logístico:** Local, vagas, organização responsável
+- **Pedagógico:** Objetivos, metodologia, materiais
+- **Certificação:** Disponibilidade e requisitos
+
+---
+
+## RELACIONAMENTOS E CARDINALIDADES
+
+### RELACIONAMENTOS PRINCIPAIS
+
+```
+RMI_AVATARS (1) ←→ (N) RMI_AUDIT_LOGS
+RMI_AVATARS (1) ←→ (N) RMI_OPT_IN_HISTORY
+RMI_AVATARS (1) ←→ (N) RMI_BETA_GROUPS
+RMI_AVATARS (1) ←→ (N) GO_INSCRICOES
+
+GO_CURSOS (1) ←→ (N) GO_INSCRICOES
+
+USER_JOURNEY (1) ←→ (1) RMI_AVATARS
+```
+
+### INTEGRIDADE REFERENCIAL
+
+- **CPF** como chave estrangeira em todas as tabelas RMI
+- **curso_id** liga inscricoes → cursos
+- **Constraints** implícitas via lógica de negócio
+
+---
+
+## EVENTOS DE TRACKING
+
+### CATEGORIZAÇÃO DE EVENTOS
+
+#### Sistema RMI
+1. **Eventos de Auditoria** (rmi_audit_logs)
+   - Modificações de dados
+   - Ações administrativas
+   - Tracking de alterações
+
+2. **Eventos de Comunicação** (rmi_opt_in_history)
+   - Consentimento de canais
+   - Preferências de contato
+   - Compliance LGPD
+
+3. **Eventos de Teste** (rmi_beta_groups)
+   - Participação em betas
+   - Feedback de features
+   - A/B testing
+
+#### Plataforma GO
+1. **Eventos Educacionais** (inscricoes)
+   - Inscrições em cursos
+   - Progressão acadêmica
+   - Conclusões e certificações
+
+2. **Eventos de Oferta** (cursos)
+   - Lançamento de cursos
+   - Abertura/fechamento de inscrições
+   - Atualizações de conteúdo
+
+---
+
+## ANÁLISES IMPLEMENTADAS
+
+### QUERIES SQL DISPONÍVEIS
+
+1. **Inventário de Usuários** - Contagem por dataset
+2. **Análise de Auditoria** - Ações mais frequentes
+3. **Opt-in/Opt-out** - Distribuição por canal
+4. **Engajamento Educacional** - Jornada completa
+5. **Cross-platform** - Usuários em ambos sistemas
+6. **Padrões Temporais** - Atividade por período
+7. **Análise Beta** - Comportamento de testadores
+8. **Conversão Educacional** - Tempo de conclusão
+9. **Canais de Comunicação** - Efetividade
+10. **Tracking 360°** - Visão completa do usuário
+
+### ENTIDADE ANALÍTICA: USER_JOURNEY
+
+**Campos Calculados:**
+- `platform` - RMI, GO, ou BOTH
+- `first_interaction` - Primeira atividade
+- `last_interaction` - Última atividade
+- `total_actions` - Total de ações no RMI
+- `total_courses` - Cursos únicos no GO
+- `engagement_level` - Alto, Médio, Baixo
+- `completion_rate` - Taxa de conclusão
+
+---
+
+## CASOS DE USO
+
+### 1. ANÁLISE DE JORNADA CROSS-PLATFORM
+**Objetivo:** Entender como usuários transitam entre RMI e GO
+**Métricas:** Taxa de conversão, tempo entre sistemas, padrões de uso
+
+### 2. SEGMENTAÇÃO DE USUÁRIOS
+**Objetivo:** Classificar usuários por comportamento e engajamento
+**Segmentos:** Beta vs Regular, Single vs Multi-platform, Engagement levels
+
+### 3. ANÁLISE DE COMUNICAÇÃO
+**Objetivo:** Otimizar canais e reduzir opt-out
+**Métricas:** Taxa de resposta por canal, padrões de consentimento
+
+### 4. PERFORMANCE EDUCACIONAL
+**Objetivo:** Melhorar ofertas e reduzir abandono
+**Métricas:** Taxa de conclusão, tempo médio, satisfação
+
+---
+
+## CONSIDERAÇÕES TÉCNICAS
+
+### FORMATO DE DADOS
+- **RMI:** Timestamps em STRING (requer parsing)
+- **GO:** Timestamps nativos TIMESTAMP/DATETIME
+- **JSON:** Campos aninhados em várias tabelas
+
+### QUALIDADE DE DADOS
+- **Completude de CPF:** Crítica para ligação entre sistemas
+- **Consistência temporal:** Validação necessária
+- **Duplicatas:** Possíveis em dados Airbyte
+
+### PERFORMANCE
+- **Índices recomendados:** cpf, timestamp, curso_id
+- **Particionamento:** Por data para logs
+- **Materialização:** Views para consultas frequentes
+
+### SEGURANÇA E COMPLIANCE
+- **LGPD:** Dados pessoais sensíveis
+- **Anonimização:** Para analytics agregadas
+- **Auditoria:** Tracking completo de acessos
+
+---
+
+## ROADMAP DE IMPLEMENTAÇÃO
+
+### FASE 1: VALIDAÇÃO (Semanas 1-2)
+- [ ] Validar completude de CPFs
+- [ ] Verificar consistência temporal
+- [ ] Identificar e tratar duplicatas
+- [ ] Estabelecer data quality checks
+
+### FASE 2: MODELAGEM (Semanas 3-4)
+- [ ] Implementar views materializadas
+- [ ] Criar tabelas fato/dimensão
+- [ ] Estabelecer SCD para histórico
+- [ ] Desenvolver métricas de negócio
+
+### FASE 3: ANALYTICS (Semanas 5-6)
+- [ ] Dashboards de KPIs
+- [ ] Relatórios automatizados
+- [ ] Alertas de anomalias
+- [ ] Análises preditivas
+
+### FASE 4: OTIMIZAÇÃO (Semanas 7-8)
+- [ ] Performance tuning
+- [ ] Automação de pipelines
+- [ ] Documentação de processos
+- [ ] Training da equipe
+
+---
+
+## ANEXOS
+
+### A. QUERIES SQL COMPLETAS
+Ver arquivo: `user_tracking_analysis.sql`
+
+### B. DIAGRAMAS TÉCNICOS
+- Fluxograma de arquitetura (Mermaid)
+- Diagrama entidade-relacionamento (ERD)
+
+### C. DICIONÁRIO DE DADOS
+Ver arquivo: `data_lake_inventory.md`
+
+---
+
+**Contato Técnico:** GitHub Copilot  
+**Data de Criação:** 18 de setembro de 2025  
+**Última Revisão:** Versão 1.0 - Análise inicial completa

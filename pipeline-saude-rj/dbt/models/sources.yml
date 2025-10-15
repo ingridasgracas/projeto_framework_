@@ -1,0 +1,82 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Dados brutos extraídos das APIs de saúde"
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: "{{ var('raw_dataset') }}"
+    
+    tables:
+      - name: atendimentos
+        description: "Dados de atendimentos médicos nas unidades de saúde"
+        columns:
+          - name: id_atendimento
+            description: "Identificador único do atendimento"
+            tests:
+              - unique
+              - not_null
+          - name: data_atendimento
+            description: "Data do atendimento"
+            tests:
+              - not_null
+          - name: tipo_atendimento
+            description: "Tipo de atendimento (Emergência, Consulta, etc.)"
+            tests:
+              - accepted_values:
+                  values: ['Emergencia', 'Consulta', 'Exame', 'Cirurgia']
+          - name: tempo_espera_minutos
+            description: "Tempo de espera em minutos"
+            tests:
+              - dbt_utils.accepted_range:
+                  min_value: 0
+                  max_value: 600
+          - name: sus_privado
+            description: "Indica se é atendimento SUS ou privado"
+            tests:
+              - accepted_values:
+                  values: ['SUS', 'Privado']
+          - name: idade_paciente
+            description: "Idade do paciente"
+            tests:
+              - dbt_utils.accepted_range:
+                  min_value: 0
+                  max_value: 120
+
+      - name: unidades_saude
+        description: "Cadastro de unidades de saúde"
+        columns:
+          - name: id
+            description: "Identificador único da unidade"
+            tests:
+              - unique
+              - not_null
+          - name: nome
+            description: "Nome da unidade de saúde"
+            tests:
+              - not_null
+          - name: tipo_unidade
+            description: "Tipo da unidade (UPA, Hospital, etc.)"
+          - name: bairro
+            description: "Bairro onde está localizada"
+
+      - name: leitos_disponibilidade
+        description: "Disponibilidade de leitos nos hospitais"
+        columns:
+          - name: id_unidade
+            description: "Identificador da unidade hospitalar"
+            tests:
+              - not_null
+          - name: leitos_totais
+            description: "Total de leitos disponíveis"
+            tests:
+              - dbt_utils.accepted_range:
+                  min_value: 0
+          - name: leitos_ocupados
+            description: "Número de leitos ocupados"
+            tests:
+              - dbt_utils.accepted_range:
+                  min_value: 0
+          - name: data_atualizacao
+            description: "Data e hora da última atualização"
+            tests:
+              - not_null

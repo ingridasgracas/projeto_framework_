@@ -1,0 +1,24 @@
+saude_rj:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: "{{ env_var('BQ_DATASET_PROCESSED') }}"
+      threads: 4
+      timeout_seconds: 300
+      location: US
+      priority: interactive
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
+      
+    prod:
+      type: bigquery
+      method: service-account
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
+      dataset: "model_saude"
+      threads: 8
+      timeout_seconds: 300
+      location: US
+      priority: interactive
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"

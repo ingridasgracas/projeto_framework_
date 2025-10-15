@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventário do Data Lake - RJ SuperApp</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 { color: #1976d2; border-bottom: 3px solid #1976d2; padding-bottom: 10px; }
+        h2 { color: #1976d2; border-bottom: 2px solid #e3f2fd; padding-bottom: 5px; }
+        h3 { color: #424242; }
+        h4 { color: #616161; }
+        
+        .toc {
+            background: #f5f5f5;
+            border-left: 4px solid #1976d2;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        .highlight {
+            background-color: #fff3e0;
+            padding: 10px;
+            border-left: 4px solid #ff9800;
+            margin: 10px 0;
+        }
+        
+        .info-box {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .warning-box {
+            background-color: #fff8e1;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+        
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+        }
+        
+        .diagram-note {
+            background-color: #e8f5e8;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            border: 1px solid #4caf50;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📊 Inventário do Data Lake - RJ SuperApp</h1>
+
+<div class="info-box">
+    <h2>📋 Visão Geral</h2>
+    <p>Este documento descreve o inventário completo das tabelas e campos disponíveis no data lake do RJ SuperApp, organizados em dois datasets principais: <strong>brutos_rmi</strong> (sistema principal) e <strong>brutos_go</strong> (plataforma educacional).</p>
+    <p><strong>Data da Análise:</strong> 18 de setembro de 2025</p>
+</div>
+
+<div class="toc">
+    <h3>📑 Índice</h3>
+    <ul>
+        <li><a href="#fluxograma">🏗️ Fluxograma da Arquitetura</a></li>
+        <li><a href="#erd">🔗 Diagrama de Entidade-Relacionamento</a></li>
+        <li><a href="#arquitetura">🏗️ Arquitetura dos Datasets</a></li>
+        <li><a href="#inventario">📊 Inventário Detalhado de Tabelas</a></li>
+        <li><a href="#relacionamentos">🔗 Relacionamentos Entre Tabelas</a></li>
+        <li><a href="#tracking">📈 Eventos de Tracking Identificados</a></li>
+        <li><a href="#casos-uso">🎯 Casos de Uso de Tracking</a></li>
+        <li><a href="#consideracoes">⚠️ Considerações Técnicas</a></li>
+        <li><a href="#proximos-passos">📋 Próximos Passos</a></li>
+    </ul>
+</div>
+
+<div class="diagram-note">
+    <h3>📊 Nota sobre Diagramas</h3>
+    <p>Os diagramas Mermaid incluídos neste documento podem não ser renderizados corretamente no Google Docs. Para visualização completa dos fluxogramas e ERD, consulte os arquivos .mmd originais ou acesse uma ferramenta de visualização Mermaid online.</p>
+</div>
+
+<h2 id="arquitetura">🏗️ Arquitetura dos Datasets</h2>
+
+<h3>Dataset: <code>rj-superapp.brutos_rmi</code></h3>
+<div class="info-box">
+    <p><strong>Descrição:</strong> Sistema principal de gestão de usuários e interações</p>
+    <p><strong>Tabelas:</strong> 7 tabelas</p>
+    <p><strong>Funcionalidade:</strong> Tracking de usuários, auditoria, comunicação, perfis</p>
+</div>
+
+<h3>Dataset: <code>rj-superapp.brutos_go</code></h3>
+<div class="info-box">
+    <p><strong>Descrição:</strong> Plataforma educacional e de cursos</p>
+    <p><strong>Tabelas:</strong> 2 tabelas</p>
+    <p><strong>Funcionalidade:</strong> Gestão de cursos e inscrições</p>
+</div>
+
+<h2 id="inventario">📊 Inventário Detalhado de Tabelas</h2>
+
+<h3>🔧 brutos_rmi - Sistema Principal</h3>
+
+<h4>1. <code>rmi_audit_logs</code> - Logs de Auditoria</h4>
+<div class="highlight">
+    <strong>Propósito:</strong> Rastreamento de todas as ações e modificações no sistema
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Campo</th>
+            <th>Tipo</th>
+            <th>Nullable</th>
+            <th>Descrição</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td colspan="4"><strong>Campos Airbyte</strong></td></tr>
+        <tr><td><code>_airbyte_raw_id</code></td><td>STRING</td><td>NO</td><td>ID único do registro Airbyte</td></tr>
+        <tr><td><code>_airbyte_extracted_at</code></td><td>TIMESTAMP</td><td>NO</td><td>Timestamp de extração</td></tr>
+        <tr><td><code>_airbyte_meta</code></td><td>JSON</td><td>NO</td><td>Metadados Airbyte</td></tr>
+        <tr><td><code>_airbyte_generation_id</code></td><td>INT64</td><td>YES</td><td>ID da geração Airbyte</td></tr>
+        <tr><td colspan="4"><strong>Identificadores</strong></td></tr>
+        <tr><td><code>_id</code></td><td>STRING</td><td>YES</td><td>ID interno do registro</td></tr>
+        <tr><td><code>cpf</code></td><td>STRING</td><td>YES</td><td>🔑 CPF do usuário</td></tr>
+        <tr><td colspan="4"><strong>Dados de Auditoria</strong></td></tr>
+        <tr><td><code>action</code></td><td>STRING</td><td>YES</td><td>📝 Tipo de ação realizada</td></tr>
+        <tr><td><code>resource</code></td><td>STRING</td><td>YES</td><td>📂 Recurso afetado</td></tr>
+        <tr><td><code>old_value</code></td><td>STRING</td><td>YES</td><td>Valor anterior</td></tr>
+        <tr><td><code>new_value</code></td><td>STRING</td><td>YES</td><td>Valor novo</td></tr>
+        <tr><td><code>timestamp</code></td><td>STRING</td><td>YES</td><td>⏰ Timestamp da ação</td></tr>
+        <tr><td><code>ip_address</code></td><td>STRING</td><td>YES</td><td>IP do usuário</td></tr>
+        <tr><td><code>user_agent</code></td><td>STRING</td><td>YES</td><td>User agent do navegador</td></tr>
+        <tr><td><code>request_id</code></td><td>STRING</td><td>YES</td><td>ID da requisição</td></tr>
+    </tbody>
+</table>
+
+<div class="highlight">
+    <h4>Eventos Rastreados:</h4>
+    <ul>
+        <li>Modificações de dados pessoais</li>
+        <li>Alterações de endereço</li>
+        <li>Mudanças de telefone/email</li>
+        <li>Atualizações de status</li>
+    </ul>
+</div>
+
+<h4>2. <code>rmi_avatars</code> - Perfis de Usuários</h4>
+<div class="highlight">
+    <strong>Propósito:</strong> Gestão de perfis e avatares dos usuários
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Categoria</th>
+            <th>Campos</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><strong>Identificação</strong></td><td><code>_id</code>, <code>cpf</code>, <code>name</code>, <code>nome</code></td></tr>
+        <tr><td><strong>Dados Pessoais</strong></td><td><code>raca</code>, <code>sexo</code>, <code>mae_nome</code>, <code>nascimento_*</code></td></tr>
+        <tr><td><strong>Endereço</strong></td><td><code>endereco_principal_*</code>, <code>endereco_alternativo</code></td></tr>
+        <tr><td><strong>Contato</strong></td><td><code>email_principal_*</code>, <code>telefone_principal_*</code></td></tr>
+        <tr><td><strong>Saúde</strong></td><td><code>saude_clinica_familia_*</code>, <code>saude_equipe_*</code></td></tr>
+        <tr><td><strong>Assistência Social</strong></td><td><code>assistencia_social_*</code>, <code>bolsa_familia_*</code></td></tr>
+        <tr><td><strong>Auditoria</strong></td><td><code>created_at</code>, <code>updated_at</code>, <code>datalake_last_updated</code></td></tr>
+    </tbody>
+</table>
+
+<h4>3. <code>rmi_beta_groups</code> - Grupos Beta</h4>
+<div class="highlight">
+    <strong>Propósito:</strong> Gestão de usuários em grupos de teste
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Campo</th>
+            <th>Tipo</th>
+            <th>Descrição</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>cpf</code></td><td>STRING</td><td>🔑 CPF do usuário</td></tr>
+        <tr><td><code>status</code></td><td>STRING</td><td>Status no grupo beta</td></tr>
+        <tr><td><code>phone_number</code></td><td>STRING</td><td>Telefone de contato</td></tr>
+        <tr><td><code>beta_group_id</code></td><td>STRING</td><td>🎯 ID do grupo beta</td></tr>
+        <tr><td><code>created_at</code></td><td>STRING</td><td>⏰ Data de entrada</td></tr>
+        <tr><td><code>updated_at</code></td><td>STRING</td><td>⏰ Última atualização</td></tr>
+    </tbody>
+</table>
+
+<h4>4. <code>rmi_opt_in_history</code> - Histórico de Consentimento</h4>
+<div class="highlight">
+    <strong>Propósito:</strong> Rastreamento de opt-in/opt-out de comunicações
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Campo</th>
+            <th>Tipo</th>
+            <th>Descrição</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>cpf</code></td><td>STRING</td><td>🔑 CPF do usuário</td></tr>
+        <tr><td><code>action</code></td><td>STRING</td><td>📱 Ação (opt-in/opt-out)</td></tr>
+        <tr><td><code>channel</code></td><td>STRING</td><td>📢 Canal de comunicação</td></tr>
+        <tr><td><code>reason</code></td><td>STRING</td><td>Motivo da ação</td></tr>
+        <tr><td><code>phone_number</code></td><td>STRING</td><td>Número de telefone</td></tr>
+        <tr><td><code>timestamp</code></td><td>STRING</td><td>⏰ Timestamp da ação</td></tr>
+    </tbody>
+</table>
+
+<div class="highlight">
+    <h4>Canais Rastreados:</h4>
+    <ul>
+        <li>SMS</li>
+        <li>WhatsApp</li>
+        <li>Email</li>
+        <li>Push notifications</li>
+    </ul>
+</div>
+
+<h3>🎓 brutos_go - Plataforma Educacional</h3>
+
+<h4>1. <code>inscricoes</code> - Inscrições em Cursos</h4>
+<div class="highlight">
+    <strong>Propósito:</strong> Gestão de inscrições e jornada educacional
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Campo</th>
+            <th>Tipo</th>
+            <th>Nullable</th>
+            <th>Descrição</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td colspan="4"><strong>Identificadores</strong></td></tr>
+        <tr><td><code>id</code></td><td>STRING</td><td>YES</td><td>🔑 ID da inscrição</td></tr>
+        <tr><td><code>cpf</code></td><td>STRING</td><td>YES</td><td>🔑 CPF do usuário</td></tr>
+        <tr><td><code>curso_id</code></td><td>INT64</td><td>YES</td><td>🔗 ID do curso</td></tr>
+        <tr><td colspan="4"><strong>Status da Inscrição</strong></td></tr>
+        <tr><td><code>status</code></td><td>STRING</td><td>YES</td><td>📊 Status atual</td></tr>
+        <tr><td><code>reason</code></td><td>STRING</td><td>YES</td><td>Motivo/observações</td></tr>
+        <tr><td colspan="4"><strong>Timeline Educacional</strong></td></tr>
+        <tr><td><code>enrolled_at</code></td><td>TIMESTAMP</td><td>YES</td><td>⏰ Data de inscrição</td></tr>
+        <tr><td><code>concluded_at</code></td><td>TIMESTAMP</td><td>YES</td><td>⏰ Data de conclusão</td></tr>
+        <tr><td><code>updated_at</code></td><td>TIMESTAMP</td><td>YES</td><td>⏰ Última atualização</td></tr>
+        <tr><td colspan="4"><strong>Certificação</strong></td></tr>
+        <tr><td><code>certificate_url</code></td><td>STRING</td><td>YES</td><td>🏆 URL do certificado</td></tr>
+    </tbody>
+</table>
+
+<div class="highlight">
+    <h4>Status Possíveis:</h4>
+    <ul>
+        <li>Inscrito</li>
+        <li>Em andamento</li>
+        <li>Concluído</li>
+        <li>Cancelado</li>
+        <li>Suspenso</li>
+    </ul>
+</div>
+
+<h4>2. <code>cursos</code> - Catálogo de Cursos</h4>
+<div class="highlight">
+    <strong>Propósito:</strong> Informações detalhadas sobre os cursos oferecidos
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Campo</th>
+            <th>Tipo</th>
+            <th>Nullable</th>
+            <th>Descrição</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td colspan="4"><strong>Identificação</strong></td></tr>
+        <tr><td><code>id</code></td><td>INT64</td><td>YES</td><td>🔑 ID único do curso</td></tr>
+        <tr><td><code>titulo</code></td><td>STRING</td><td>YES</td><td>📚 Título do curso</td></tr>
+        <tr><td><code>theme</code></td><td>STRING</td><td>YES</td><td>Tema/categoria</td></tr>
+        <tr><td colspan="4"><strong>Configuração Acadêmica</strong></td></tr>
+        <tr><td><code>modalidade</code></td><td>STRING</td><td>YES</td><td>🎯 Modalidade (presencial/online)</td></tr>
+        <tr><td><code>carga_horaria</code></td><td>INT64</td><td>YES</td><td>⏱️ Carga horária total</td></tr>
+        <tr><td><code>numero_vagas</code></td><td>INT64</td><td>YES</td><td>👥 Número de vagas</td></tr>
+        <tr><td colspan="4"><strong>Cronograma</strong></td></tr>
+        <tr><td><code>data_inicio</code></td><td>DATETIME</td><td>YES</td><td>⏰ Data de início</td></tr>
+        <tr><td><code>data_termino</code></td><td>DATETIME</td><td>YES</td><td>⏰ Data de término</td></tr>
+        <tr><td><code>enrollment_start_date</code></td><td>TIMESTAMP</td><td>YES</td><td>📝 Início das inscrições</td></tr>
+        <tr><td><code>enrollment_end_date</code></td><td>TIMESTAMP</td><td>YES</td><td>📝 Fim das inscrições</td></tr>
+    </tbody>
+</table>
+
+<h2 id="relacionamentos">🔗 Relacionamentos Entre Tabelas</h2>
+
+<h3>Chaves Primárias de Ligação</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Chave</th>
+            <th>Presente em</th>
+            <th>Função</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><strong>CPF</strong></td><td>Todas as tabelas RMI + <code>inscricoes</code></td><td>Identificador universal de usuário - Permite tracking cross-platform</td></tr>
+        <tr><td><strong>curso_id</strong></td><td><code>inscricoes.curso_id</code> → <code>cursos.id</code></td><td>Relacionamento 1:N (um curso, várias inscrições)</td></tr>
+        <tr><td><strong>phone_number</strong></td><td><code>rmi_opt_in_history</code>, <code>rmi_beta_groups</code>, <code>rmi_phone_cpf_mappings</code></td><td>Identificador secundário</td></tr>
+    </tbody>
+</table>
+
+<h3>Campos Temporais por Contexto</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Contexto</th>
+            <th>Campos</th>
+            <th>Formato</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><strong>Auditoria</strong></td><td><code>timestamp</code>, <code>created_at</code>, <code>updated_at</code></td><td>STRING</td></tr>
+        <tr><td><strong>Educacional</strong></td><td><code>enrolled_at</code>, <code>concluded_at</code>, <code>data_inicio</code></td><td>TIMESTAMP/DATETIME</td></tr>
+        <tr><td><strong>Sistema</strong></td><td><code>_airbyte_extracted_at</code>, <code>datalake_last_updated</code></td><td>TIMESTAMP/STRING</td></tr>
+    </tbody>
+</table>
+
+<h2 id="tracking">📈 Eventos de Tracking Identificados</h2>
+
+<h3>🔍 RMI - Sistema Principal</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Tabela</th>
+            <th>Eventos</th>
+            <th>Campos Chave</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>rmi_audit_logs</code></td><td>Modificações de dados</td><td><code>action</code>, <code>resource</code>, <code>timestamp</code></td></tr>
+        <tr><td><code>rmi_opt_in_history</code></td><td>Consentimento comunicação</td><td><code>action</code>, <code>channel</code>, <code>reason</code></td></tr>
+        <tr><td><code>rmi_beta_groups</code></td><td>Participação em testes</td><td><code>status</code>, <code>beta_group_id</code></td></tr>
+        <tr><td><code>rmi_avatars</code></td><td>Criação/atualização perfil</td><td><code>created_at</code>, <code>updated_at</code></td></tr>
+    </tbody>
+</table>
+
+<h3>🎓 GO - Plataforma Educacional</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Tabela</th>
+            <th>Eventos</th>
+            <th>Campos Chave</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>inscricoes</code></td><td>Jornada educacional</td><td><code>enrolled_at</code>, <code>concluded_at</code>, <code>status</code></td></tr>
+        <tr><td><code>cursos</code></td><td>Gestão de ofertas</td><td><code>enrollment_start_date</code>, <code>enrollment_end_date</code></td></tr>
+    </tbody>
+</table>
+
+<h2 id="casos-uso">🎯 Casos de Uso de Tracking</h2>
+
+<h3>1. Jornada do Usuário Cross-Platform</h3>
+<div class="highlight">
+    <p>Exemplo: Usuários que se inscreveram em cursos após ações no RMI</p>
+    <pre><code>SELECT r.cpf, r.action, r.timestamp, g.enrolled_at, c.titulo
+FROM rmi_audit_logs r
+JOIN inscricoes g ON r.cpf = g.cpf
+JOIN cursos c ON g.curso_id = c.id
+WHERE r.timestamp < g.enrolled_at</code></pre>
+</div>
+
+<h3>2. Análise de Engajamento</h3>
+<ul>
+    <li>Taxa de opt-out por canal</li>
+    <li>Conversão de inscrição para conclusão</li>
+    <li>Atividade por horário/dia da semana</li>
+</ul>
+
+<h3>3. Segmentação de Usuários</h3>
+<ul>
+    <li>Usuários beta vs. regulares</li>
+    <li>Multi-platform vs. single-platform</li>
+    <li>Engajamento educacional por perfil demográfico</li>
+</ul>
+
+<h3>4. Análise de Comunicação</h3>
+<ul>
+    <li>Efetividade de canais por público</li>
+    <li>Padrões de opt-in/opt-out</li>
+    <li>Resposta a campanhas</li>
+</ul>
+
+<h2 id="consideracoes">⚠️ Considerações Técnicas</h2>
+
+<div class="warning-box">
+    <h3>Formato de Dados</h3>
+    <ul>
+        <li><strong>RMI:</strong> Timestamps em formato STRING (requer parsing)</li>
+        <li><strong>GO:</strong> Timestamps estruturados (TIMESTAMP/DATETIME)</li>
+        <li><strong>JSON:</strong> Campos aninhados requerem parsing específico</li>
+    </ul>
+</div>
+
+<div class="warning-box">
+    <h3>Qualidade dos Dados</h3>
+    <ul>
+        <li><strong>Campos nullable:</strong> Verificar completude antes da análise</li>
+        <li><strong>CPF:</strong> Campo chave para ligação entre sistemas</li>
+        <li><strong>Timestamps:</strong> Validar consistência temporal</li>
+    </ul>
+</div>
+
+<div class="warning-box">
+    <h3>Performance</h3>
+    <ul>
+        <li><strong>Índices recomendados:</strong> <code>cpf</code>, <code>timestamp</code>, <code>curso_id</code></li>
+        <li><strong>Particionamento:</strong> Por data para tabelas de log</li>
+        <li><strong>Materialização:</strong> Considerar views para consultas frequentes</li>
+    </ul>
+</div>
+
+<h2 id="proximos-passos">📋 Próximos Passos</h2>
+
+<h3>1. Validação de Dados</h3>
+<ul>
+    <li>Verificar completude dos CPFs</li>
+    <li>Validar consistência temporal</li>
+    <li>Identificar possíveis duplicatas</li>
+</ul>
+
+<h3>2. Modelagem Analytics</h3>
+<ul>
+    <li>Criar tabelas fato/dimensão</li>
+    <li>Implementar SCD para tracking histórico</li>
+    <li>Desenvolver métricas de negócio</li>
+</ul>
+
+<h3>3. Dashboards e Monitoramento</h3>
+<ul>
+    <li>KPIs de engajamento</li>
+    <li>Funnel de conversão educacional</li>
+    <li>Alertas de qualidade de dados</li>
+</ul>
+
+<hr>
+
+<div class="info-box">
+    <p><strong>Documento gerado em:</strong> 18 de setembro de 2025</p>
+    <p><strong>Versão:</strong> 1.0</p>
+    <p><strong>Última atualização:</strong> Análise inicial do esquema</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+---
+title: Arquitetura do Data Lake - RJ SuperApp
+---
+flowchart TB
+    %% Estilo das cores
+    classDef rmiTable fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef goTable fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef airbyte fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef userFlow fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef tracking fill:#fff8e1,stroke:#f57f17,stroke-width:2px
+
+    %% Fontes de Dados
+    subgraph Sources["🔌 Fontes de Dados"]
+        direction TB
+        RMI_SRC["🏢 Sistema RMI<br/>(Sistema Principal)"]
+        GO_SRC["🎓 Plataforma GO<br/>(Educacional)"]
+    end
+
+    %% Airbyte ETL
+    subgraph ETL["⚙️ Camada ETL"]
+        direction TB
+        AIRBYTE["🔄 Airbyte<br/>Extract, Transform, Load"]
+    end
+
+    %% Data Lake Principal
+    subgraph DataLake["🏗️ Data Lake - rj-superapp"]
+        direction TB
+        
+        %% Dataset RMI
+        subgraph RMI_DS["📊 Dataset: brutos_rmi"]
+            direction TB
+            
+            subgraph Audit["🔍 Auditoria & Logs"]
+                AUDIT_LOGS["📝 rmi_audit_logs<br/>• action, resource<br/>• timestamp<br/>• old_value/new_value<br/>• ip_address, user_agent"]:::rmiTable
+            end
+            
+            subgraph UserMgmt["👤 Gestão de Usuários"]
+                AVATARS["👤 rmi_avatars<br/>• Perfis completos<br/>• Dados pessoais<br/>• Endereços, contatos<br/>• Saúde, assistência social"]:::rmiTable
+                
+                USER_CONFIG["⚙️ rmi_users_config<br/>• Configurações<br/>• Preferências<br/>• created_at, updated_at"]:::rmiTable
+                
+                SELF_DECLARED["📋 rmi_self_declared<br/>• Dados autodeclarados<br/>• Informações fornecidas<br/>• pelo usuário"]:::rmiTable
+            end
+            
+            subgraph Communication["📱 Comunicação"]
+                OPT_HISTORY["📞 rmi_opt_in_history<br/>• action (opt-in/opt-out)<br/>• channel (SMS, WhatsApp)<br/>• reason, timestamp"]:::rmiTable
+                
+                PHONE_MAP["📱 rmi_phone_cpf_mappings<br/>• Mapeamento telefone-CPF<br/>• phone_number, cpf"]:::rmiTable
+            end
+            
+            subgraph Testing["🧪 Testes"]
+                BETA_GROUPS["🔬 rmi_beta_groups<br/>• beta_group_id<br/>• status<br/>• phone_number"]:::rmiTable
+            end
+        end
+        
+        %% Dataset GO
+        subgraph GO_DS["📚 Dataset: brutos_go"]
+            direction TB
+            
+            COURSES["📖 cursos<br/>• titulo, modalidade<br/>• data_inicio/termino<br/>• carga_horaria<br/>• facilitator, organizacao"]:::goTable
+            
+            ENROLLMENTS["✏️ inscricoes<br/>• cpf, curso_id<br/>• status, reason<br/>• enrolled_at<br/>• concluded_at<br/>• certificate_url"]:::goTable
+        end
+    end
+
+    %% Camada de Tracking
+    subgraph Tracking["📈 Camada de Tracking"]
+        direction TB
+        
+        subgraph UserJourney["🗺️ Jornada do Usuário"]
+            CROSS_PLATFORM["🔗 Cross-Platform<br/>CPF como chave única"]:::userFlow
+            TIMELINE["⏰ Timeline de Eventos<br/>Timestamps estruturados"]:::userFlow
+        end
+        
+        subgraph Events["📊 Eventos Rastreados"]
+            RMI_EVENTS["🔍 Eventos RMI<br/>• Modificações de dados<br/>• Opt-in/opt-out<br/>• Ações administrativas<br/>• Participação beta"]:::tracking
+            
+            GO_EVENTS["🎓 Eventos GO<br/>• Inscrições<br/>• Progressão<br/>• Conclusões<br/>• Certificações"]:::tracking
+        end
+    end
+
+    %% Identificadores Principais
+    subgraph Identifiers["🔑 Identificadores Principais"]
+        direction LR
+        CPF["🆔 CPF<br/>Chave universal"]:::userFlow
+        EMAIL["📧 Email<br/>ID secundário"]:::userFlow
+        PHONE["📱 Telefone<br/>Comunicação"]:::userFlow
+        INTERNAL_ID["🔢 IDs Internos<br/>_id, curso_id"]:::userFlow
+    end
+
+    %% Campos Temporais
+    subgraph TimeFields["⏰ Dimensão Temporal"]
+        direction LR
+        AIRBYTE_TIME["🔄 Airbyte<br/>_airbyte_extracted_at"]:::airbyte
+        RMI_TIME["📝 RMI<br/>timestamp (STRING)<br/>created_at, updated_at"]:::rmiTable
+        GO_TIME["🎓 GO<br/>enrolled_at, concluded_at<br/>TIMESTAMP/DATETIME"]:::goTable
+    end
+
+    %% Casos de Uso
+    subgraph UseCases["🎯 Casos de Uso Analytics"]
+        direction TB
+        
+        ENGAGEMENT["📊 Análise de Engajamento<br/>• Taxa de conversão<br/>• Padrões temporais<br/>• Canais efetivos"]
+        
+        SEGMENTATION["👥 Segmentação<br/>• Beta vs Regular<br/>• Multi vs Single platform<br/>• Perfil demográfico"]
+        
+        FUNNEL["🚀 Funel de Conversão<br/>• Inscrição → Conclusão<br/>• Tempo médio<br/>• Taxa de abandono"]
+        
+        COMMUNICATION["📢 Efetividade Comunicação<br/>• Opt-in/opt-out patterns<br/>• Canal preferencial<br/>• Resposta a campanhas"]
+    end
+
+    %% Conexões principais
+    RMI_SRC --> AIRBYTE
+    GO_SRC --> AIRBYTE
+    AIRBYTE --> DataLake
+    
+    %% Relacionamentos internos
+    AUDIT_LOGS -.->|CPF| AVATARS
+    AVATARS -.->|CPF| OPT_HISTORY
+    PHONE_MAP -.->|CPF| AVATARS
+    BETA_GROUPS -.->|CPF| AVATARS
+    
+    ENROLLMENTS -.->|curso_id| COURSES
+    ENROLLMENTS -.->|CPF| AVATARS
+    
+    %% Tracking flows
+    DataLake --> Tracking
+    Tracking --> UseCases
+    
+    %% Identificadores
+    CPF -.->|Liga todas<br/>as tabelas| DataLake
+    EMAIL -.->|ID secundário| DataLake
+    PHONE -.->|Comunicação| DataLake
+    
+    %% Temporal
+    TimeFields -.->|Tracking temporal| Tracking
+
+    %% Fluxo de eventos principais
+    AUDIT_LOGS -->|Eventos de sistema| RMI_EVENTS
+    OPT_HISTORY -->|Eventos comunicação| RMI_EVENTS
+    BETA_GROUPS -->|Eventos teste| RMI_EVENTS
+    
+    ENROLLMENTS -->|Eventos educacionais| GO_EVENTS
+    COURSES -->|Contexto educacional| GO_EVENTS
+    
+    RMI_EVENTS --> CROSS_PLATFORM
+    GO_EVENTS --> CROSS_PLATFORM
+    
+    CROSS_PLATFORM --> ENGAGEMENT
+    CROSS_PLATFORM --> SEGMENTATION
+    CROSS_PLATFORM --> FUNNEL
+    CROSS_PLATFORM --> COMMUNICATION
